@@ -76,4 +76,12 @@ public class Avatar {
 
     public Avatar() {
     }
+
+    @Override
+    public String toString() {
+        return "Avatar{" +
+                "id=" + id +
+                ", student=" + student +
+                '}';
+    }
 }
