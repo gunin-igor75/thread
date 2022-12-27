@@ -10,7 +10,9 @@ import ru.hogwarts.hogwarts.model.Student;
 import ru.hogwarts.hogwarts.repository.FacultyRepository;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FacultyServiceImp implements FacultyService {
@@ -101,5 +103,15 @@ public class FacultyServiceImp implements FacultyService {
         Faculty faculty = findFaculty(id);
         log.info("providing list student by id faculty {}", id);
         return faculty.getStudents();
+    }
+
+    @Override
+    public String getNameFacultyMaxLength() {
+        List<Faculty> listFaculty = facultyRepository.findAll();
+        return listFaculty.stream()
+                .map(Faculty::getName)
+                .sorted((o1, o2) -> o2.length() - o1.length())
+                .limit(1L).toList()
+                .get(0);
     }
 }

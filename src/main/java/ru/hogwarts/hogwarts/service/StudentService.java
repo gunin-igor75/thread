@@ -30,4 +30,6 @@ public interface StudentService {
     Faculty findFaculty(long id);
 
     void updateStudent(Student student);
+
+    List<String> getStudentA(char letter);
 }

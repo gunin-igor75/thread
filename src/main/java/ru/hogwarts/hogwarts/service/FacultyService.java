@@ -24,4 +24,6 @@ public interface FacultyService {
     List<Faculty> getAllFaculty();
 
     List<Student> findStudents(long id);
+
+    String getNameFacultyMaxLength();
 }

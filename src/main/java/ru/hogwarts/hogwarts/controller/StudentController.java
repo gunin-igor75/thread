@@ -78,4 +78,9 @@ public class StudentController {
     public ResponseEntity<Faculty> getFacultyStudent(@PathVariable long id) {
         return ResponseEntity.ok(studentService.findFaculty(id));
     }
+
+    @GetMapping("/get-students-A/{letter}")
+    public ResponseEntity<List<String>> getStudentsA(@PathVariable char letter) {
+        return ResponseEntity.ok(studentService.getStudentA(letter));
+    }
 }

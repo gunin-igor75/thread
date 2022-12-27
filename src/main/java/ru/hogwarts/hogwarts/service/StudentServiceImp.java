@@ -11,6 +11,7 @@ import ru.hogwarts.hogwarts.repository.StudentRepository;
 
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentServiceImp implements StudentService{
@@ -41,6 +42,17 @@ public class StudentServiceImp implements StudentService{
         int facultyId = new Random().nextInt(faculties.size() -1) + 1;
         studentRepository.updateStudent(facultyId, student.getId());
         log.info("Update colum table student end successfully");
+    }
+
+    @Override
+    public List<String> getStudentA(char letter) {
+        List<Student> listStudent = studentRepository.findAll();
+        return listStudent.stream()
+                .filter(st -> st.getName().toLowerCase().charAt(0) == Character.toLowerCase(letter))
+                .map(st ->st.getName().toUpperCase())
+                .map(st -> (st.charAt(0) + st.substring(1).toLowerCase()))
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -110,7 +122,11 @@ public class StudentServiceImp implements StudentService{
 
     public int getAvgAgeStudent() {
         log.debug("Payment avg age students");
-        int avg = studentRepository.getAvgAgeStudent();
+        List<Student> listStudents = studentRepository.findAll();
+        int avg = (int)listStudents.stream()
+                .mapToDouble(Student::getAge)
+                .average()
+                .orElse(0);
         log.info("avg age students {}", avg);
         return avg;
     }
