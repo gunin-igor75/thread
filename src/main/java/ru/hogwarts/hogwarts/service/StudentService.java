@@ -32,4 +32,8 @@ public interface StudentService {
     void updateStudent(Student student);
 
     List<String> getStudentA(char letter);
+
+    void threadAsynchronous();
+
+    void threadSynchronous();
 }
