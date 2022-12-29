@@ -154,29 +154,42 @@ public class StudentServiceImp implements StudentService {
 
     @Override
     public void threadAsynchronous() {
+        log.debug("create thread");
         Thread threadOne = new Thread(() -> printAsynchronous(2, 3));
         Thread threadTwo = new Thread(() -> printAsynchronous(4, 5));
         printAsynchronous(0, 1);
         threadOne.start();
         threadTwo.start();
+        log.info("thread create and run");
     }
 
     @Override
     public void threadSynchronous() {
+        log.debug("create thread");
         Thread threadOne = new Thread(() -> printSynchronous(2, 3));
         Thread threadTwo = new Thread(() -> printSynchronous(4, 5));
         printSynchronous(0, 1);
         threadOne.start();
+        try {
+            log.debug("sleep thread main");
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            log.error("interrupt sleep");
+            throw new RuntimeException(e);
+        }
         threadTwo.start();
+        log.info("thread create and run");
     }
 
     private void printAsynchronous(int... indexes) {
+        log.debug("output students name");
         for (int index : indexes) {
             System.out.println(studentList.get(index));
         }
     }
 
     private synchronized void printSynchronous(int... indexes) {
+        log.debug("output students name");
         for (int index : indexes) {
             System.out.println(studentList.get(index));
         }
