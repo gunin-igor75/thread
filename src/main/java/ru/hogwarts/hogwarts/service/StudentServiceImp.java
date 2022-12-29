@@ -24,6 +24,10 @@ public class StudentServiceImp implements StudentService {
 
     private static final Logger log = LoggerFactory.getLogger(StudentServiceImp.class);
 
+    private volatile int count;
+
+    private final Object lock = new Object();
+
     public StudentServiceImp(StudentRepository studentRepository, FacultyRepository facultyRepository) {
         log.debug("Initialization studentRepository facultyRepository and create list faculty");
         this.studentRepository = studentRepository;
@@ -166,17 +170,38 @@ public class StudentServiceImp implements StudentService {
     @Override
     public void threadSynchronous() {
         log.debug("create thread");
-        Thread threadOne = new Thread(() -> printSynchronous(2, 3));
-        Thread threadTwo = new Thread(() -> printSynchronous(4, 5));
+        Thread threadOne = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (lock) {
+                    while (count < 2) {
+                        try {
+                            lock.wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    printSynchronous(2, 3);
+                }
+            }
+        });
+        Thread threadTwo = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (lock) {
+                    while (count < 4) {
+                        try {
+                            lock.wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    printSynchronous(4, 5);
+                }
+            }
+        });
         printSynchronous(0, 1);
         threadOne.start();
-        try {
-            log.debug("sleep thread main");
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            log.error("interrupt sleep");
-            throw new RuntimeException(e);
-        }
         threadTwo.start();
         log.info("thread create and run");
     }
@@ -188,10 +213,14 @@ public class StudentServiceImp implements StudentService {
         }
     }
 
-    private synchronized void printSynchronous(int... indexes) {
-        log.debug("output students name");
-        for (int index : indexes) {
-            System.out.println(studentList.get(index));
+    private void printSynchronous(int... indexes) {
+        synchronized (lock) {
+            log.debug("output students name");
+            for (int index : indexes) {
+                System.out.println(studentList.get(index));
+                count++;
+            }
+            lock.notifyAll();
         }
     }
 }
