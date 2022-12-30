@@ -83,4 +83,14 @@ public class StudentController {
     public ResponseEntity<List<String>> getStudentsA(@PathVariable char letter) {
         return ResponseEntity.ok(studentService.getStudentA(letter));
     }
+
+    @GetMapping("/thread-asynchronous")
+    public void threadAsynchronous() {
+        studentService.threadAsynchronous();
+    }
+
+    @GetMapping("/thread-synchronous")
+    public void threadSynchronous() {
+        studentService.threadSynchronous();
+    }
 }

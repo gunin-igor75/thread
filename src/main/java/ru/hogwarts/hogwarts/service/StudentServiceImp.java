@@ -14,19 +14,26 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
-public class StudentServiceImp implements StudentService{
+public class StudentServiceImp implements StudentService {
     private final StudentRepository studentRepository;
     private final FacultyRepository facultyRepository;
 
     private final List<Faculty> faculties;
 
+    private List<Student> studentList;
+
     private static final Logger log = LoggerFactory.getLogger(StudentServiceImp.class);
+
+    private volatile int count;
+
+    private final Object lock = new Object();
 
     public StudentServiceImp(StudentRepository studentRepository, FacultyRepository facultyRepository) {
         log.debug("Initialization studentRepository facultyRepository and create list faculty");
         this.studentRepository = studentRepository;
         this.facultyRepository = facultyRepository;
         faculties = facultyRepository.findAll();
+        studentList = studentRepository.findAll();
     }
 
     @Override
@@ -39,7 +46,7 @@ public class StudentServiceImp implements StudentService{
 
     public void updateStudent(Student student) {
         log.debug("Update column table student by id faculty");
-        int facultyId = new Random().nextInt(faculties.size() -1) + 1;
+        int facultyId = new Random().nextInt(faculties.size() - 1) + 1;
         studentRepository.updateStudent(facultyId, student.getId());
         log.info("Update colum table student end successfully");
     }
@@ -49,7 +56,7 @@ public class StudentServiceImp implements StudentService{
         List<Student> listStudent = studentRepository.findAll();
         return listStudent.stream()
                 .filter(st -> st.getName().toLowerCase().charAt(0) == Character.toLowerCase(letter))
-                .map(st ->st.getName().toUpperCase())
+                .map(st -> st.getName().toUpperCase())
                 .map(st -> (st.charAt(0) + st.substring(1).toLowerCase()))
                 .sorted()
                 .collect(Collectors.toList());
@@ -73,7 +80,7 @@ public class StudentServiceImp implements StudentService{
         log.debug("Edite student");
         Student newStudent = findStudent(student.getId());
         if (newStudent == null) {
-            log.error("Student ot found") ;
+            log.error("Student ot found");
             throw new RuntimeException("Id must by empty");
         }
         log.info("Student edite successfully");
@@ -106,6 +113,7 @@ public class StudentServiceImp implements StudentService{
         log.info("providing list student by age {}", age);
         return studentRepository.findFacultyAge(age);
     }
+
     public Faculty findFaculty(long id) {
         log.debug("Search faculty by id {} student", id);
         Student student = findStudent(id);
@@ -123,7 +131,7 @@ public class StudentServiceImp implements StudentService{
     public int getAvgAgeStudent() {
         log.debug("Payment avg age students");
         List<Student> listStudents = studentRepository.findAll();
-        int avg = (int)listStudents.stream()
+        int avg = (int) listStudents.stream()
                 .mapToDouble(Student::getAge)
                 .average()
                 .orElse(0);
@@ -146,5 +154,73 @@ public class StudentServiceImp implements StudentService{
         log.debug("Search students in between {} and {}", minAge, maxAge);
         log.info("Found students in between {} and {}", minAge, maxAge);
         return studentRepository.findAllByAgeBetween(minAge, maxAge);
+    }
+
+    @Override
+    public void threadAsynchronous() {
+        log.debug("create thread");
+        Thread threadOne = new Thread(() -> printAsynchronous(2, 3));
+        Thread threadTwo = new Thread(() -> printAsynchronous(4, 5));
+        printAsynchronous(0, 1);
+        threadOne.start();
+        threadTwo.start();
+        log.info("thread create and run");
+    }
+
+    @Override
+    public void threadSynchronous() {
+        log.debug("create thread");
+        Thread threadOne = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (lock) {
+                    while (count < 2) {
+                        try {
+                            lock.wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    printSynchronous(2, 3);
+                }
+            }
+        });
+        Thread threadTwo = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (lock) {
+                    while (count < 4) {
+                        try {
+                            lock.wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    printSynchronous(4, 5);
+                }
+            }
+        });
+        printSynchronous(0, 1);
+        threadOne.start();
+        threadTwo.start();
+        log.info("thread create and run");
+    }
+
+    private void printAsynchronous(int... indexes) {
+        log.debug("output students name");
+        for (int index : indexes) {
+            System.out.println(studentList.get(index));
+        }
+    }
+
+    private void printSynchronous(int... indexes) {
+        synchronized (lock) {
+            log.debug("output students name");
+            for (int index : indexes) {
+                System.out.println(studentList.get(index));
+                count++;
+            }
+            lock.notifyAll();
+        }
     }
 }
